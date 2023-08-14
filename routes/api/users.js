@@ -190,5 +190,27 @@ router.get('/profile', passport.authenticate('jwt', {
     });
 });
 
+/**
+ * @route GET api/users/getAllProfiles
+ * @desc Get all user profiles
+ * @access Private
+ */
+router.get('/getAllProfiles', passport.authenticate('jwt', { session: false }), async (req, res) => {
+    try {
+        if (req.user.role !== 'Admin') {
+            return res.status(403).json({ msg: "You don't have permission to access this resource." });
+        }
+
+        const allProfiles = await User.find({});
+
+        return res.json({ profiles: allProfiles });
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({ msg: 'Server Error' });
+    }
+});
+
+
+
 
 module.exports = router;
