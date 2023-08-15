@@ -10,6 +10,7 @@ router.post('/createCourse', (req, res) => {
         group,
         name,
         description,
+        educator,
     } = req.body;
 
     Course.findOne({
@@ -27,6 +28,7 @@ router.post('/createCourse', (req, res) => {
                 group,
                 name,
                 description,
+                educator,
             });
 
             newCourse.save()

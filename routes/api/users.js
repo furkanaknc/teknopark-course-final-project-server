@@ -98,6 +98,7 @@ router.post('/login', (req, res) => {
                         success: true,
                         token: `Bearer ${token}`,
                         user: user,
+                        role:user.role,
                         msg: "You are now logged in."
                     });
                 })
@@ -209,6 +210,82 @@ router.get('/getAllProfiles', passport.authenticate('jwt', { session: false }), 
         return res.status(500).json({ msg: 'Server Error' });
     }
 });
+
+/**
+ * @route PUT api/users/updateProfile/:id
+ * @desc Update a user's profile
+ * @access Private (only for admins)
+ */
+router.put('/updateUser/:id', passport.authenticate('jwt', { session: false }), async (req, res) => {
+    try {
+        if (req.user.role !== 'Admin') {
+            return res.status(403).json({ msg: "You don't have permission to access this resource." });
+        }
+
+        const userId = req.params.id;
+        const updatedData = req.body;
+
+        const userToUpdate = await User.findById(userId);
+        if (!userToUpdate) {
+            return res.status(404).json({ msg: 'User not found' });
+        }
+
+        // Update user's data
+        userToUpdate.set(updatedData);
+        await userToUpdate.save();
+
+        return res.json({ success: true, msg: 'User profile updated successfully' });
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({ msg: 'Server Error' });
+    }
+});
+
+
+router.delete('/deleteUser/:id', passport.authenticate('jwt', { session: false }), async (req, res) => {
+    try {
+        if (req.user.role !== 'Admin') {
+            return res.status(403).json({ msg: "You don't have permission to access this resource." });
+        }
+
+        const userId = req.params.id;
+
+        const userToDelete = await User.findByIdAndDelete(userId);
+        if (!userToDelete) {
+            return res.status(404).json({ msg: 'User not found' });
+        }
+
+        return res.json({ success: true, msg: 'User profile deleted successfully' });
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({ msg: 'Server Error' });
+    }
+});
+
+/**
+ * @route GET api/users/getEducators
+ * @desc Get all user profiles with Educator role
+ * @access Private (only for admins)
+ */
+router.get('/getEducators', passport.authenticate('jwt', { session: false }), async (req, res) => {
+    try {
+         if (req.user.role !== 'Admin') {
+             return res.status(403).json({ msg: "You don't have permission to access this resource." });
+         }
+
+        const educators = await User.find({ role: 'Educator' }, 'firstName lastName');
+
+        return res.json({ educators });
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({ msg: 'Server Error' });
+    }
+});
+
+
+
+
+
 
 
 

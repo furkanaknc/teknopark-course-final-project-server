@@ -8,6 +8,10 @@ const CourseSchema = new mongoose.Schema({
         type:String,
         required:true
    },
+   educator: {
+     type: Schema.Types.ObjectId,
+     ref: 'users' 
+     },
    group:{
         type:String,
         enum:Object.keys(courseGroup).map((el)=>courseGroup[el]),
@@ -21,7 +25,8 @@ const CourseSchema = new mongoose.Schema({
         type:String,
         maxlength: 255,
         default:'eğitim'
-   }
+   },
+
 
 
 })
