@@ -269,10 +269,6 @@ router.delete('/deleteUser/:id', passport.authenticate('jwt', { session: false }
  */
 router.get('/getEducators', passport.authenticate('jwt', { session: false }), async (req, res) => {
     try {
-         if (req.user.role !== 'Admin') {
-             return res.status(403).json({ msg: "You don't have permission to access this resource." });
-         }
-
         const educators = await User.find({ role: 'Educator' }, 'firstName lastName');
 
         return res.json({ educators });
