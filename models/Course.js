@@ -26,6 +26,11 @@ const CourseSchema = new mongoose.Schema({
         maxlength: 255,
         default:'eğitim'
    },
+   
+   students:[{
+          type: Schema.Types.ObjectId,
+          ref: 'users',
+   }]
 
 
 

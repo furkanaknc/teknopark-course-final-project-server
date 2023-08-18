@@ -283,9 +283,88 @@ router.get('/getEducators', passport.authenticate('jwt', { session: false }), as
     }
 });
 
+/**
+ * @route PUT api/users/:userId/addCourse
+ * @desc Add a course to a user's list of courses
+ * @access Private (only for admins and company owners)
+ */
+router.put('/:userId/addCourse', passport.authenticate('jwt', { session: false }), async (req, res) => {
+    try {
+        // Ensure the user has the right permissions
+        if (req.user.role !== userRole.ADMIN && req.user.role !== userRole.COMPANY_OWNER) {
+            return res.status(403).json({ msg: "You don't have permission to access this resource." });
+        }
 
+        const { courseId } = req.body;
 
+        // Find the user by the provided userId
+        const userToUpdate = await User.findById(req.params.userId);
+        if (!userToUpdate) {
+            return res.status(404).json({ msg: 'User not found' });
+        }
 
+        // Ensure the course exists
+        const course = await Course.findById(courseId);
+        if (!course) {
+            return res.status(404).json({ msg: 'Course not found' });
+        }
+
+        // Check if the user is already enrolled in the course
+        if (userToUpdate.courses.includes(courseId)) {
+            return res.status(400).json({ msg: 'User is already enrolled in this course' });
+        }
+
+        // Add the course to the user's courses list
+        userToUpdate.courses.push(courseId);
+        await userToUpdate.save();
+
+        await Course.updateOne({ _id: courseId }, { $addToSet: { students: req.params.userId } });
+
+        return res.json({ success: true, msg: 'Course added to user successfully' });
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({ msg: 'Server Error' });
+    }
+});
+
+/**
+ * @route PUT api/users/:userId/removeCourse
+ * @desc Remove a course from a user's list of courses
+ * @access Private (only for admins and company owners)
+ */
+router.put('/:userId/removeCourse', passport.authenticate('jwt', { session: false }), async (req, res) => {
+    try {
+        // Ensure the user has the right permissions
+        if (req.user.role !== userRole.ADMIN && req.user.role !== userRole.COMPANY_OWNER) {
+            return res.status(403).json({ msg: "You don't have permission to access this resource." });
+        }
+
+        const { courseId } = req.body;
+
+        // Find the user by the provided userId
+        const userToUpdate = await User.findById(req.params.userId);
+        if (!userToUpdate) {
+            return res.status(404).json({ msg: 'User not found' });
+        }
+
+        // Check if the user is enrolled in the course
+        if (!userToUpdate.courses.includes(courseId)) {
+            return res.status(400).json({ msg: 'User is not enrolled in this course' });
+        }
+
+        // Remove the course from the user's courses list
+        userToUpdate.courses = userToUpdate.courses.filter(course => course.toString() !== courseId);
+        await userToUpdate.save();
+
+        // Remove the user from the course's students list
+        await Course.updateOne({ _id: courseId }, { $pull: { students: req.params.userId } });
+
+        return res.json({ success: true, msg: 'Course removed from user successfully' });
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({ msg: 'Server Error' });
+    }
+});
 
 
 
